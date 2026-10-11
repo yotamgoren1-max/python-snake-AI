@@ -25,8 +25,8 @@ grid_surface=pygame.Surface((config.WINDOW_WIDTH,config.WINDOW_HEIGHT)) #creatin
 game_objects.basic_screen(grid_surface)
 
 # Initialize game objects
-my_snake=game_objects.Snake()
-my_apple=game_objects.Apple()
+snake=game_objects.Snake()
+apple=game_objects.Apple()
 
 # --- Main Game Loop ---
 while running: #the main loop of the game
@@ -36,35 +36,35 @@ while running: #the main loop of the game
         if event.type == pygame.KEYDOWN: #takes the most recent event from the user
             game_started = True #if the users input is "KEY DOWN"= some key is pressed start the game
 
-            if event.key == pygame.K_UP and my_snake.direction != config.DOWN:
-                my_snake.direction = config.UP
+            if event.key == pygame.K_UP and snake.direction != config.DOWN:
+                snake.direction = config.UP
 
-            elif event.key == pygame.K_DOWN and my_snake.direction != config.UP:
-                my_snake.direction = config.DOWN
+            elif event.key == pygame.K_DOWN and snake.direction != config.UP:
+                snake.direction = config.DOWN
 
-            elif event.key == pygame.K_LEFT and my_snake.direction != config.RIGHT:
-                my_snake.direction = config.LEFT
+            elif event.key == pygame.K_LEFT and snake.direction != config.RIGHT:
+                snake.direction = config.LEFT
 
-            elif event.key == pygame.K_RIGHT and my_snake.direction != config.LEFT:
-                my_snake.direction = config.RIGHT
+            elif event.key == pygame.K_RIGHT and snake.direction != config.LEFT:
+                snake.direction = config.RIGHT
 
     if game_started:
-        my_snake.move() #move the snake after updating the curr input
+        snake.move() #move the snake after updating the curr input
 
-        if my_snake.check_apple_collision(my_apple):
-            my_snake.grow()
-            my_apple.Random_Apple()
+        if snake.check_apple_collision(apple):
+            snake.grow()
+            apple.Random_Apple()
             curr_score+=1
 
-        if my_snake.check_self_collision() or my_snake.check_wall_collision():
+        if snake.check_self_collision() or snake.check_wall_collision():
             running=False
 
     score_text="score: " + str(curr_score) #score tracker
     text_score_surface=score_font.render(score_text,True,config.WHITE)
 
     screen.blit(grid_surface,(0,0))
-    my_snake.draw(screen)
-    my_apple.draw_apple(screen)
+    snake.draw(screen)
+    apple.draw_apple(screen)
     screen.blit(text_score_surface,(20,20))
 
     curr_level=(curr_score//5)+1 #start from level 1
