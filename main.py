@@ -1,76 +1,58 @@
 """
 main.py
-The main entry point for the Snake Game.
-Handles the game loop, user input, collision logic, and screen rendering.
+The main training loop for the Q-Learning Snake AI.
+Connects the Agent with the SnakeEnv across multiple training episodes.
 """
 
-import pygame
 import config
-import game_objects
+from environment import SnakeEnv
+from agent import Agent
 
-# --- Initialization ---
-pygame.init()  #starting the pygame Tools
-screen=pygame.display.set_mode((config.WINDOW_WIDTH,config.WINDOW_HEIGHT)) #creates the monitor
-pygame.display.set_caption("python-Snake-Game")
-clock=pygame.time.Clock() #creating the clock
-score_font=pygame.font.Font(None,36) #creating the basic class for a text
 
-# --- Game Variables ---
-running=True
-game_started = False
-curr_score=0 #number of apples
+def train():
+    """
+    Runs the reinforcement learning training pipeline.
+    """
+    # 1. Initialize environment and agent
+    # Set render_mode=False for fast/headless training, or True to watch the snake play
+    env = SnakeEnv(render_mode=True)
+    agent = Agent()
 
-# Create the background grid surface once
-grid_surface=pygame.Surface((config.WINDOW_WIDTH,config.WINDOW_HEIGHT)) #creating the basic grid screen
-game_objects.basic_screen(grid_surface)
+    record = 0
+    total_score = 0
 
-# Initialize game objects
-snake=game_objects.Snake()
-apple=game_objects.Apple()
+    print("--- Starting Training Session ---")
 
-# --- Main Game Loop ---
-while running: #the main loop of the game
-    for event in pygame.event.get(): #check for every event possible and gets the input from the user
-        if event.type == pygame.QUIT:
-            running = False # if the event is QUIT End the loop
-        if event.type == pygame.KEYDOWN: #takes the most recent event from the user
-            game_started = True #if the users input is "KEY DOWN"= some key is pressed start the game
+    # 2. Iterate through training episodes
+    for episode in range(1, config.NUM_EPISODES + 1):
+        # Reset game and get initial 11-feature state
+        state = env.reset()
+        done = False
 
-            if event.key == pygame.K_UP and snake.direction != config.DOWN:
-                snake.direction = config.UP
+        # 3. Inner loop: Step-by-step game execution
+        while not done:
+            # Agent decides relative action (0=straight, 1=right, 2=left)
+            action = agent.choose_action(state)
 
-            elif event.key == pygame.K_DOWN and snake.direction != config.UP:
-                snake.direction = config.DOWN
+            # Environment applies physics, collisions, and returns outcomes
+            next_state, reward, done, score = env.step(action)
 
-            elif event.key == pygame.K_LEFT and snake.direction != config.RIGHT:
-                snake.direction = config.LEFT
+            # Agent updates its Q-Table using the Bellman equation
+            agent.learn(state, action, reward, next_state, done)
 
-            elif event.key == pygame.K_RIGHT and snake.direction != config.LEFT:
-                snake.direction = config.RIGHT
+            # Transition to the next state
+            state = next_state
 
-    if game_started:
-        snake.move() #move the snake after updating the curr input
+        # 4. Post-episode updates and metrics
+        agent.decay_epsilon()
+        total_score += score
 
-        if snake.check_apple_collision(apple):
-            snake.grow()
-            apple.Random_Apple()
-            curr_score+=1
+        if score > record:
+            record = score
 
-        if snake.check_self_collision() or snake.check_wall_collision():
-            running=False
+        # Print training progress
+        print(f"Episode: {episode:<5} | Score: {score:<3} | Record: {record:<3} | Epsilon: {agent.epsilon:.4f}")
 
-    score_text="score: " + str(curr_score) #score tracker
-    text_score_surface=score_font.render(score_text,True,config.WHITE)
 
-    screen.blit(grid_surface,(0,0))
-    snake.draw(screen)
-    apple.draw_apple(screen)
-    screen.blit(text_score_surface,(20,20))
-
-    curr_level=(curr_score//5)+1 #start from level 1
-    curr_fps=min(config.INITIAL_FPS+(curr_score//5 * config.SPEED_BOOST_PER_LEVEL),config.MAX_FPS)
-    clock.tick(curr_fps)
-
-    pygame.display.update() #update the screen for each event
-
-pygame.quit() #end the pygame init func
+if __name__ == "__main__":
+    train()

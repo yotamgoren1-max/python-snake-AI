@@ -67,23 +67,27 @@ class Snake:
         new_tail=pygame.Rect((new_x, new_y, config.CELL_SIZE, config.CELL_SIZE))
         self.body.append(new_tail)#add the new position
 
-    def check_apple_collision(self,apple):
-        return self.body[0].colliderect(apple.rect) #returns True or False
-
     def check_wall_collision(self):
-        flag=False
-        head=self.body[0]
+        """
+        Checks if the snake's head has collided with the screen boundaries.
+        Returns True on collision, False otherwise.
+        """
+        flag = False
+        head = self.body[0]
         if head.x < 0 or head.x >= config.WINDOW_WIDTH or head.y < 0 or head.y >= config.WINDOW_HEIGHT:
-            flag=True
+            flag = True
         return flag
 
     def check_self_collision(self):
+        """
+        Checks if the snake's head has collided with any of its body segments.
+        Returns True on collision, False otherwise.
+        """
         head = self.body[0]
-        for i in range(1,len(self.body)):
-            if head.x== self.body[i].x and head.y== self.body[i].y:
+        for i in range(1, len(self.body)):
+            if head.x == self.body[i].x and head.y == self.body[i].y:
                 return True
         return False
-
 
 
 
