@@ -3,7 +3,6 @@ environment.py
 Wraps the Snake game into a Reinforcement Learning environment.
 Manages game state, physics, rewards, and rendering.
 """
-
 import pygame
 import config
 import game_objects
