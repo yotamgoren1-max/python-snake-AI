@@ -49,3 +49,58 @@ class SnakeEnv:
         self.apple = game_objects.Apple()
         curr_state = agent.get_state(self.snake, self.apple)
         return curr_state
+
+    def step(self, action):
+        """
+        Executes one step in the environment given an action.
+        Updates the snake's direction, moves the snake, checks for collisions or food consumption,
+        updates the display if rendering is active, and returns the step transition tuple.
+        """
+        self.steps += 1
+
+        # Handle Pygame window events to prevent freezing
+        if self.render_mode:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+
+        # Translate relative action (0=straight, 1=right, 2=left) into a direction vector and move
+        self.snake.direction = agent.get_next_direction(self.snake.direction, action)
+        self.snake.move()
+
+        reward = config.REWARD_STEP
+        done = False
+
+        # Check for terminal conditions: wall collision, self-collision, or step limit reached
+        if (self.snake.check_wall_collision() or
+                self.snake.check_self_collision() or
+                self.steps > config.MAX_STEPS_PER_EPISODE):
+            done = True
+            reward = config.REWARD_GAME_OVER
+            next_state = agent.get_state(self.snake, self.apple)
+            return next_state, reward, done, self.score
+
+        # Check if snake's head consumed the apple
+        head = self.snake.body[0]
+        if head.colliderect(self.apple.rect):
+            self.score += 1
+            reward = config.REWARD_EAT_APPLE
+            self.snake.grow()
+            self.apple.Random_Apple()
+            self.steps = 0  # Reset starvation counter
+
+        # Render current frame if rendering is enabled
+        if self.render_mode:
+            self.screen.blit(self.grid_surface, (0, 0))
+            self.snake.draw(self.screen)
+            self.apple.draw_apple(self.screen)
+            score_text = self.score_font.render(f"Score: {self.score}", True, config.WHITE)
+            self.screen.blit(score_text, (10, 10))
+            pygame.display.flip()
+            self.clock.tick(config.TRAIN_FPS)
+
+        # Extract next state representation
+        next_state = agent.get_state(self.snake, self.apple)
+
+        return next_state, reward, done, self.score
